@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6fb">
+  <title>Catatan Keuangan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6fb;
+      --surface: #fff;
+      --text: #182230;
+      --muted: #748094;
+      --border: #e6eaf0;
+      --primary: #5664e9;
+      --green: #15966a;
+      --red: #df5365;
+      --shadow: 0 12px 32px rgba(27, 39, 68, .07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    .container {
+      width: min(1050px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 56px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    h1 { margin: 0; font-size: clamp(24px, 5vw, 34px); }
+    .subtitle { margin: 6px 0 0; color: var(--muted); }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+    }
+
+    .button:hover { filter: brightness(.96); }
+    .button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(86, 100, 233, .22);
+      outline-offset: 2px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .card, .panel {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .card { padding: 20px; }
+    .card-label { color: var(--muted); font-size: 14px; }
+    .card-value { margin-top: 8px; font-size: clamp(20px, 4vw, 28px); font-weight: 750; }
+    .income-value { color: var(--green); }
+    .expense-value { color: var(--red); }
+
+    .panel { padding: 22px; margin-bottom: 20px; }
+    .panel h2 { margin: 0 0 17px; font-size: 19px; }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr 1.4fr 1.2fr auto;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .field input, .field select, .toolbar select {
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar h2 { margin: 0; }
+    .toolbar-actions { display: flex; align-items: center; gap: 9px; }
+    .toolbar select { width: auto; min-width: 165px; }
+
+    .transaction-list { display: grid; gap: 9px; }
+
+    .transaction {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 15px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+    }
+
+    .transaction-title { font-weight: 700; overflow-wrap: anywhere; }
+    .transaction-meta { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .transaction-amount { white-space: nowrap; font-weight: 750; }
+    .transaction-amount.income { color: var(--green); }
+    .transaction-amount.expense { color: var(--red); }
+
+    .delete-button {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .delete-button:hover { color: var(--red); border-color: #f0c4ca; }
+    .empty { padding: 30px 12px; color: var(--muted); text-align: center; }
+
+    .notice {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 850px) {
+      form { grid-template-columns: repeat(3, 1fr); }
+      form .button { width: 100%; }
+    }
+
+    @media (max-width: 600px) {
+      .container { width: min(100% - 22px, 520px); padding-top: 22px; }
+      header { align-items: flex-start; }
+      header .button { padding: 9px 11px; }
+      .summary { grid-template-columns: 1fr; gap: 9px; }
+      .card { padding: 15px 17px; }
+      .card-value { margin-top: 4px; }
+      .panel { padding: 16px; }
+      form { grid-template-columns: 1fr 1fr; }
+      form .field:nth-child(4) { grid-column: span 2; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      .toolbar-actions { width: 100%; }
+      .toolbar select { flex: 1; min-width: 0; }
+      .transaction { grid-template-columns: 1fr auto; gap: 8px; }
+      .transaction-amount { grid-column: 1; grid-row: 2; }
+      .delete-button { grid-column: 2; grid-row: 1 / span 2; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div>
+        <h1>Catatan Keuangan</h1>
+        <p class="subtitle">Pantau pemasukan dan pengeluaranmu.</p>
+      </div>
+      <button class="button secondary" id="exportButton" type="button">Ekspor CSV</button>
+    </header>
+
+    <section class="summary" aria-label="Ringkasan keuangan">
+      <article class="card">
+        <div class="card-label">Saldo periode</div>
+        <div class="card-value" id="balance">Rp0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">Pemasukan</div>
+        <div class="card-value income-value" id="incomeTotal">Rp0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">Pengeluaran</div>
+        <div class="card-value expense-value" id="expenseTotal">Rp0</div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Tambah transaksi</h2>
+      <form id="transactionForm">
+        <div class="field">
+          <label for="type">Jenis</label>
+          <select id="type" required>
+            <option value="expense">Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="amount">Jumlah (Rp)</label>
+          <input id="amount" type="number" min="1" step="1" placeholder="50000" required>
+        </div>
+
+        <div class="field">
+          <label for="category">Kategori</label>
+          <select id="category" required>
+            <option>Makanan</option>
+            <option>Transportasi</option>
+            <option>Belanja</option>
+            <option>Tagihan</option>
+            <option>Kesehatan</option>
+            <option>Hiburan</option>
+            <option>Gaji</option>
+            <option>Bonus</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="description">Keterangan</label>
+          <input id="description" type="text" maxlength="80" placeholder="Contoh: makan siang" required>
+        </div>
+
+        <div class="field">
+          <label for="date">Tanggal</label>
+          <input id="date" type="date" required>
+        </div>
+
+        <button class="button" type="submit">Tambah</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <h2>Transaksi</h2>
+        <div class="toolbar-actions">
+          <label for="monthFilter">Periode:</label>
+          <select id="monthFilter" aria-label="Filter periode"></select>
+        </div>
+      </div>
+      <div class="transaction-list" id="transactionList"></div>
+      <p class="notice">
+        Data disimpan hanya di browser/perangkat ini. Menghapus data browser atau berpindah perangkat
+        dapat membuat data tidak tersedia. Ekspor CSV untuk menyimpan salinan.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "catatan-keuangan-transaksi-v1";
+      const form = document.getElementById("transactionForm");
+      const typeInput = document.getElementById("type");
+      const amountInput = document.getElementById("amount");
+      const categoryInput = document.getElementById("category");
+      const descriptionInput = document.getElementById("description");
+      const dateInput = document.getElementById("date");
+      const monthFilter = document.getElementById("monthFilter");
+      const list = document.getElementById("transactionList");
+
+      const today = new Date();
+      dateInput.value = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+      ].join("-");
+
+      function loadTransactions() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          return Array.isArray(saved) ? saved.filter(isValidTransaction) : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function isValidTransaction(item) {
+        return item && typeof item.id === "string" &&
+          (item.type === "income" || item.type === "expense") &&
+          Number.isFinite(item.amount) && item.amount > 0 &&
+          typeof item.category === "string" &&
+          typeof item.description === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(item.date);
+      }
+
+      let transactions = loadTransactions();
+
+      function saveTransactions() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        } catch {
+          alert("Data tidak dapat disimpan. Periksa ruang penyimpanan browser.");
+        }
+      }
+
+      function rupiah(value) {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0
+        }).format(value);
+      }
+
+      function getMonth(date) {
+        return date.slice(0, 7);
+      }
+
+      function monthLabel(value) {
+        if (value === "all") return "Semua waktu";
+        const [year, month] = value.split("-").map(Number);
+        return new Intl.DateTimeFormat("id-ID", {
+          month: "long",
+          year: "numeric"
+        }).format(new Date(year, month - 1, 1));
+      }
+
+      function refreshMonthOptions() {
+        const previous = monthFilter.value;
+        const months = new Set([getMonth(dateInput.value)]);
+        transactions.forEach(item => months.add(getMonth(item.date)));
+
+        const sortedMonths = [...months].sort().reverse();
+        monthFilter.replaceChildren();
+
+        const allOption = document.createElement("option");
+        allOption.value = "all";
+        allOption.textContent = "Semua waktu";
+        monthFilter.append(allOption);
+
+        sortedMonths.forEach(month => {
+          const option = document.createElement("option");
+          option.value = month;
+          option.textContent = monthLabel(month);
+          monthFilter.append(option);
+        });
+
+        monthFilter.value = [...monthFilter.options].some(option => option.value === previous)
+          ? previous
+          : getMonth(dateInput.value);
+      }
+
+      function visibleTransactions() {
+        const selected = monthFilter.value;
+        return [...transactions]
+          .filter(item => selected === "all" || getMonth(item.date) === selected)
+          .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+      }
+
+      function render() {
+        refreshMonthOptions();
+        const filtered = visibleTransactions();
+        const income = filtered
+          .filter(item => item.type === "income")
+          .reduce((sum, item) => sum + item.amount, 0);
+        const expense = filtered
+          .filter(item => item.type === "expense")
+          .reduce((sum, item) => sum + item.amount, 0);
+
+        document.getElementById("balance").textContent = rupiah(income - expense);
+        document.getElementById("incomeTotal").textContent = rupiah(income);
+        document.getElementById("expenseTotal").textContent = rupiah(expense);
+
+        list.replaceChildren();
+
+        if (filtered.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "Belum ada transaksi pada periode ini.";
+          list.append(empty);
+          return;
+        }
+
+        filtered.forEach(item => {
+          const row = document.createElement("article");
+          row.className = "transaction";
+
+          const details = document.createElement("div");
+          const title = document.createElement("div");
+          title.className = "transaction-title";
+          title.textContent = item.description;
+
+          const meta = document.createElement("div");
+          meta.className = "transaction-meta";
+          meta.textContent = `${item.category} · ${formatDate(item.date)}`;
+          details.append(title, meta);
+
+          const amount = document.createElement("div");
+          amount.className = `transaction-amount ${item.type}`;
+          amount.textContent = `${item.type === "income" ? "+" : "−"} ${rupiah(item.amount)}`;
+
+          const remove = document.createElement("button");
+          remove.className = "delete-button";
+          remove.type = "button";
+          remove.textContent = "×";
+          remove.setAttribute("aria-label", `Hapus transaksi ${item.description}`);
+          remove.addEventListener("click", () => deleteTransaction(item.id));
+
+          row.append(details, amount, remove);
+          list.append(row);
+        });
+      }
+
+      function formatDate(value) {
+        const [year, month, day] = value.split("-").map(Number);
+        return new Intl.DateTimeFormat("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        }).format(new Date(year, month - 1, day));
+      }
+
+      function deleteTransaction(id) {
+        if (!confirm("Hapus transaksi ini?")) return;
+        transactions = transactions.filter(item => item.id !== id);
+        saveTransactions();
+        render();
+      }
+
+      form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const amount = Number(amountInput.value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          alert("Masukkan jumlah yang lebih besar dari nol.");
+          amountInput.focus();
+          return;
+        }
+
+        transactions.push({
+          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          type: typeInput.value,
+          amount,
+          category: categoryInput.value,
+          description: descriptionInput.value.trim(),
+          date: dateInput.value
+        });
+
+        saveTransactions();
+        form.reset();
+        dateInput.value = [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, "0"),
+          String(today.getDate()).padStart(2, "0")
+        ].join("-");
+        typeInput.value = "expense";
+        render();
+        descriptionInput.focus();
+      });
+
+      monthFilter.addEventListener("change", render);
+
+      document.getElementById("exportButton").addEventListener("click", () => {
+        const rows = visibleTransactions();
+        if (rows.length === 0) {
+          alert("Tidak ada transaksi untuk diekspor.");
+          return;
+        }
+
+        const csvCell = value => `"${String(value).replaceAll('"', '""')}"`;
+        const csv = [
+          ["Tanggal", "Jenis", "Kategori", "Keterangan", "Jumlah (Rp)"],
+          ...rows.map(item => [
+            item.date,
+            item.type === "income" ? "Pemasukan" : "Pengeluaran",
+            item.category,
+            item.description,
+            item.amount
+          ])
+        ].map(row => row.map(csvCell).join(",")).join("\r\n");
+
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `catatan-keuangan-${monthFilter.value}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
